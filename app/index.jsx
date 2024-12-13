@@ -1,4 +1,3 @@
-import { StatusBar } from 'expo-status-bar';
 import {
    StyleSheet,
     Text, 
@@ -6,29 +5,29 @@ import {
     TextInput,
    TouchableOpacity, 
    Image } from 'react-native';
-import Button from "./components/Button";
-import Input from "./components/Input";
+import Button from "../components/Button";
+import Input from "../components/Input";
+import {Link, Stack} from 'expo-router'; 
 
 export default function App() {
   return (
     <View style={styles.container}>
-      <TouchableOpacity> <Image source={require('./assets/logo.png')} style={styles.logo} /></TouchableOpacity>
-      <HelloWorld name="Fajar Krisna Jssaya"/>
+      <TouchableOpacity> 
+        <Image source={require('../assets/logo.png')} style={styles.logo} />
+      </TouchableOpacity>
       <TextInput 
         style={styles.input} 
         placeholder="Email" 
         placeholderTextColor="#aaa" 
         />
       <TextInput 
-        style={styles.input} 
-        placeholder="Password" 
-        placeholderTextColor="#aaa" 
-        secureTextEntry={true} 
+        style={styles.input}
+        placeholder="Password"
+        placeholderTextColor="#aaa"
+        secureTextEntry={true}
       />
-      <Input text="Email" />
-      <Button text="Login" bgcolor="#4DB6AC" />
-      <StatusBar style="hidden"/>
-
+      <Button title="Login" />
+      <Text>Don't have account?<Link href="/register" style={{ color: 'blue' }}> Register here</Link> </Text> 
     </View>
   );
 }
