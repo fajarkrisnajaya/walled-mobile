@@ -1,45 +1,67 @@
 import { Link, Stack } from 'expo-router';
-import { Image, Text, View, StyleSheet, TextInput } from 'react-native';
+import { Image, Text, View, StyleSheet, TextInput, Modal ,Pressable} from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import Button from '../components/Button';
-import Tnc from '../components/TnC';
+import { useState } from 'react';
+import Checkbox from 'expo-checkbox';
+import CustomModal from '../components/CustomModal';
+
 
 
 export default function Register() {
+  const [isChecked, setChecked] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+
+
   return (
     <View style={styles.container}>
-      <Image source={require('../assets/logo.png')} style={styles.logo} />        
+  <CustomModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(!modalVisible)}
+      />
+      
+      <Image source={require('../assets/logo.png')} style={styles.logo} />
       <TextInput 
-          style={styles.input} 
-          placeholder="Fullname" 
-          placeholderTextColor="#aaa" 
-          keyboardType='ascii-capable'
-          />
-        <TextInput 
-            style={styles.input} 
-            placeholder="Email" 
-            placeholderTextColor="#aaa" 
-            keyboardType='email-address'
-            />
-        <TextInput 
-            style={styles.input} 
-            placeholder="Phone Number" 
-            placeholderTextColor="#aaa" 
-            keyboardType='phone-pad'
-            />
-        <TextInput 
-            style={styles.input} 
-            placeholder="Password" 
-            placeholderTextColor="#aaa" 
-            keyboardType='password'
-            />
-    
-            <Button text="Register" marginTop={48} marginBottom={16} />
-           
-            <Text>I have read and agree to the<Link href="/" style={{color: '#19918F'}}> Terms and Conditions *</Link> </Text>
-            <Text>Have an account? <Link href="/" style={{color: '#19918F'}}>Login here</Link> </Text>
-            
-            <StatusBar style="auto"/>
+        style={styles.input} 
+        placeholder="Fullname" 
+        placeholderTextColor="#aaa" 
+        keyboardType='ascii-capable'
+      />
+      <TextInput 
+        style={styles.input} 
+        placeholder="Email" 
+        placeholderTextColor="#aaa" 
+        keyboardType='email-address'
+      />
+      <TextInput 
+        style={styles.input} 
+        placeholder="Phone Number" 
+        placeholderTextColor="#aaa" 
+        keyboardType='phone-pad'
+      />
+      <TextInput 
+        style={styles.input} 
+        placeholder="Password" 
+        placeholderTextColor="#aaa" 
+        secureTextEntry={true}
+      />
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15 }}>
+        <Checkbox
+          style={{ marginRight: 8 }}
+          value={isChecked}
+          onValueChange={setChecked}
+        />
+        <Text style={{ flexDirection: 'row' }}>
+          I have read and agree to the
+          <Text onPress={() => setModalVisible(true)} style={{color: '#19918F'}}> Terms and Conditions *</Text>
+        </Text>
+      </View>
+      <Button text="Register" marginTop={16} marginBottom={16} />
+      
+      <Text>
+        Have an account? <Link href="/" style={{color: '#19918F'}}>Login here</Link>
+      </Text>
+      <StatusBar style="auto" />
     </View>
   );
 }
