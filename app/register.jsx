@@ -12,7 +12,6 @@ export default function Register() {
   const [isChecked, setChecked] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
 
-
   return (
     <View style={styles.container}>
   <CustomModal
