@@ -15,7 +15,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="topup"
         options={{
-          title: 'Top Up',
+          title: 'Top Up', headerShown: true,
           tabBarIcon: ({ color }) => <FontAwesome6 size={28} name="plus" color={color} />,
         }}
       />

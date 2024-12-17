@@ -8,7 +8,7 @@ import {
    Image } from 'react-native';
 import Button from "./components/Button";
 import Input from "./components/Input";
-
+import Axios from 'axios';
 export default function App() {
   return (
     <View style={styles.container}>

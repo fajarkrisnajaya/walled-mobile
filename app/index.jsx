@@ -1,66 +1,108 @@
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, View, TextInput, Image, Text } from "react-native";
 import Button from "../components/Button";
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
 import { z } from "zod";
 import { useState } from "react";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const LoginSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
-  password: z.string().min(8, { message: "Must be 8 or more characters long" }),
+  password: z.string().min(4, { message: "Must be 4 or more characters long" }),
 });
 
 export default function App() {
-  const [form, setForm] = useState({});
+  const [form, setForm] = useState({ email: "", password: "" });
   const [errorMsg, setErrors] = useState({});
-  
-  handleInputChange = (key, value) => {
-    setErrors({ ...errorMsg, [key]: ""})
-    setForm({ ...form, [key]: value });
-  };
+  const [serverError, setServerError] = useState("");
 
-  handleSubmit = () => {
+  const handleInputChange = (key, value) => {
+    setForm({ ...form, [key]: value });
+
     try {
-      LoginSchema.parse(form);
+      LoginSchema.pick({ [key]: true }).parse({ [key]: value });
+      setErrors((prev) => ({ ...prev, [key]: "" }));
     } catch (err) {
-      const validation = err.errors;
-      const errors = {};
-      validation.map((item) => {
-        const key = item.path[0];
-        errors[key] = item.message;
-      });
-      setErrors(errors);
+      setErrors((prev) => ({ ...prev, [key]: err.errors[0].message }));
     }
   };
+
+  const handleSubmit = async () => {
+    try {
+      LoginSchema.parse(form);
+
+      const res = await axios.post(
+        "http://192.168.30.58:8080/auth/login",
+        form
+      );
+      await AsyncStorage.setItem("token", res.data.data.token);
+      router.replace("/(home)")
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        if (err.response) {
+          setServerError(err.response.data.message || "An error occurred");
+        } else if (err.request) {
+          setServerError("Network error. Please try again later.");
+          console.error("Network Error:", err.request);
+        } else {
+          setServerError("An unexpected error occurred.");
+          console.error("Request Setup Error:", err.message);
+        }
+      } else if (err?.errors) {
+        const errors = {};
+        err.errors.forEach((item) => {
+          const key = item.path[0];
+          errors[key] = item.message;
+        });
+        setErrors(errors);
+      } else {
+        setServerError("An unknown error occurred.");
+        console.error("Unhandled Error:", err);
+      }
+    }
+  };
+
   return (
     <View style={styles.container}>
+      {serverError && <Text>{serverError}</Text>}
       <Image
         source={require("../assets/logo.png")}
         style={styles.logo}
         resizeMode="stretch"
       />
+
       <TextInput
-        style={styles.input}
+        style={[styles.input, errorMsg.email && styles.inputError]}
         placeholder="Email"
         placeholderTextColor="#aaa"
+        autoCapitalize="none"
         keyboardType="email-address"
         onChangeText={(text) => handleInputChange("email", text)}
+        value={form.email}
       />
-      {errorMsg && <Text style={styles.errorMsg}>{errorMsg.email}</Text>}
+      {errorMsg.email ? (
+        <Text style={styles.errorMsg}>{errorMsg.email}</Text>
+      ) : null}
+
       <TextInput
-        style={styles.input}
+        style={[styles.input, errorMsg.password && styles.inputError]}
         placeholder="Password"
         placeholderTextColor="#aaa"
         secureTextEntry={true}
         onChangeText={(text) => handleInputChange("password", text)}
+        value={form.password}
       />
-      {errorMsg && <Text style={styles.errorMsg}>{errorMsg.password}</Text>}
+      {errorMsg.password ? (
+        <Text style={styles.errorMsg}>{errorMsg.password}</Text>
+      ) : null}
+
       <Link href="/(home)" style={styles.linkText}>
         Masuk
       </Link>
       <Button handlePress={handleSubmit} text="Login" />
       <Text style={styles.link}>
-        Dont't have an account?{" "}
+        Don't have an account?{" "}
         <Link href="/register" style={styles.linkText}>
           Register here
         </Link>
@@ -83,11 +125,6 @@ const styles = StyleSheet.create({
     height: 57,
     marginBottom: 30,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-  },
   input: {
     width: "100%",
     height: 50,
@@ -99,18 +136,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#f9f9f9",
     fontSize: 16,
   },
-  button: {
-    backgroundColor: "#4DB6AC",
-    paddingVertical: 15,
-    paddingHorizontal: 30,
-    borderRadius: 15,
-    width: "100%",
-    alignItems: "center",
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
+  inputError: {
+    borderColor: "red",
   },
   link: {
     marginTop: 10,
@@ -122,6 +149,9 @@ const styles = StyleSheet.create({
   },
   errorMsg: {
     color: "red",
+    fontSize: 12,
     width: "100%",
+    textAlign: "left",
+    marginTop: 5,
   },
 });
