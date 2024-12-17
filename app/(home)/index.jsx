@@ -15,7 +15,7 @@ export default function Home() {
         const value = await AsyncStorage.getItem("token");
         if (value !== null) {
           const res = await axios.get(
-            "http://192.168.30.58:8080/profile",
+            "http://192.168.30.58:8080/profile", 
             {
               headers: { Authorization: `Bearer ${value}` },
             }

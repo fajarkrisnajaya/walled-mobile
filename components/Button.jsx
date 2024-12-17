@@ -1,6 +1,9 @@
 import { TouchableOpacity, Text, StyleSheet } from "react-native";
 
-function Button({ bgColor = "#19918F", text, handlePress = () => {} }) {
+function Button({ bgColor = "#19918F", text, handlePress}) {
+  console.log('HANDLE PRESS', handlePress);
+  
+
   return (
     <TouchableOpacity
       onPress={handlePress}
