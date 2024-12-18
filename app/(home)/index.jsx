@@ -4,12 +4,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useState } from "react";
 import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 import axios from "axios";
+import moment from 'moment';
 
 export default function Home() {
   const [user, setUser] = useState({});
   const [transactions, setTransactions] = useState([]);
   
-  //Refresh
+  // Refresh
   const [refreshing, setRefreshing] = React.useState(false);
 
   const onRefresh = React.useCallback(async () => {
@@ -120,7 +121,7 @@ export default function Home() {
             </View>
 
             <View style={styles.accountnumber}>
-              <Text style={{ color: '#fff', fontSize: 18 }}>Account No.</Text>
+              <Text style={{ color: '#fff', fontSize: 18 }}>Account No. {user.id} </Text>
               <Text style={{ fontWeight: 'bold', color: '#fff', fontSize: 18 }}>{user.accountnumber}</Text>
             </View>
 
@@ -150,6 +151,7 @@ export default function Home() {
                         <View style={{ flex: 1, marginLeft: 10 }}>
                           <Text style={styles.transactionName}>{transaction.fromto}</Text>
                           <Text style={styles.transactionDescription}>{transaction.description}</Text>
+                          <Text style={styles.transactionDate}>{moment(transaction.datetime).format('MMMM Do YYYY, h:mm:ss a')}</Text>
                         </View>
                         <Text
                           style={[
@@ -240,6 +242,10 @@ const styles = StyleSheet.create({
   transactionDescription: {
     fontSize: 14,
     color: '#666',
+  },
+  transactionDate: {
+    fontSize: 12,
+    color: '#999',
   },
   transactionAmount: {
     fontSize: 16,

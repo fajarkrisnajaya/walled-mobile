@@ -10,6 +10,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const LoginSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
   password: z.string().min(4, { message: "Must be 4 or more characters long" }),
+  
 });
 
 export default function App() {
