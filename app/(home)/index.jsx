@@ -1,13 +1,43 @@
 import { Link, Stack } from 'expo-router';
-import { Image, Text, View, StyleSheet, ScrollView } from 'react-native';
+import { Image, Text, View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 import axios from "axios";
 
 export default function Home() {
   const [user, setUser] = useState({});
   const [transactions, setTransactions] = useState([]);
+  
+  //Refresh
+  const [refreshing, setRefreshing] = React.useState(false);
 
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+  
+    // Reuse the fetching logic to update data
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (token) {
+        const [userRes, transactionsRes] = await Promise.all([
+          axios.get("http://192.168.30.58:8080/profile", {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get("http://192.168.30.58:8080/transactions", {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+  
+        setUser(userRes.data.data);
+        setTransactions(transactionsRes.data.data);
+      }
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
+  
   // Fetch User Profile Data
   useEffect(() => {
     const getData = async () => {
@@ -51,85 +81,94 @@ export default function Home() {
   }, []);
 
   return (
-    <ScrollView style={{ flex: 1 }}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          <Image
-            source={
-              user.avatar_url
-                ? { uri: user.avatar_url }
-                : require('../../assets/avatar.png')
-            }
-            style={styles.profileAvatar}
-          />
-          <View>
-            <Text style={{ fontSize: 18, fontWeight: 'bold' }}>{user.fullname}</Text>
-            <Text style={{ fontSize: 18 }}>{user.typeofaccount}</Text>
+    <SafeAreaProvider>
+      <SafeAreaView style={{ flex: 1 }}>
+        <ScrollView 
+          style={{ flex: 1 }} 
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
+          {/* Header */}
+          <View style={styles.header}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <Image
+                source={
+                  user.avatar_url
+                    ? { uri: user.avatar_url }
+                    : require('../../assets/avatar.png')
+                }
+                style={styles.profileAvatar}
+              />
+              <View>
+                <Text style={{ fontSize: 18, fontWeight: 'bold' }}>{user.fullname}</Text>
+                <Text style={{ fontSize: 18 }}>{user.typeofaccount}</Text>
+              </View>
+            </View>
+            <Image source={require('../../assets/suntoggle.png')} />
           </View>
-        </View>
-        <Image source={require('../../assets/suntoggle.png')} />
-      </View>
 
-      <View style={{ backgroundColor: '#FAFBFD', paddingHorizontal: 20, flex: 1 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 25, justifyContent: 'space-between' }}>
-          <View style={{ width: '70%' }}>
-            <Text style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 8 }}>
-              Good Morning, {user.fullname ? user.fullname.split(' ')[0] : 'Guest'}
-            </Text>
-            <Text style={{ fontSize: 18 }}>Check all your incoming and outgoing transactions here</Text>
-          </View>
-          <Image source={require('../../assets/sun.png')} style={{ width: 81, height: 77 }} />
-        </View>
+          <View style={{ backgroundColor: '#FAFBFD', paddingHorizontal: 20, flex: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 25, justifyContent: 'space-between' }}>
+              <View style={{ width: '70%' }}>
+                <Text style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 8 }}>
+                  Good Morning, {user.fullname ? user.fullname.split(' ')[0] : 'Guest'}
+                </Text>
+                <Text style={{ fontSize: 18 }}>Check all your incoming and outgoing transactions here</Text>
+              </View>
+              <Image source={require('../../assets/sun.png')} style={{ width: 81, height: 77 }} />
+            </View>
 
-        <View style={styles.accountnumber}>
-          <Text style={{ color: '#fff', fontSize: 18 }}>Account No.</Text>
-          <Text style={{ fontWeight: 'bold', color: '#fff', fontSize: 18 }}>{user.accountnumber}</Text>
-        </View>
+            <View style={styles.accountnumber}>
+              <Text style={{ color: '#fff', fontSize: 18 }}>Account No.</Text>
+              <Text style={{ fontWeight: 'bold', color: '#fff', fontSize: 18 }}>{user.accountnumber}</Text>
+            </View>
 
-        <View style={styles.balancebox}>
-          <View>
-            <Text style={{ fontSize: 20 }}>Balance</Text>
-            <Text style={{ fontSize: 24, fontWeight: 'bold' }}>Rp {user.balance}</Text>
-          </View>
-        </View>
+            <View style={styles.balancebox}>
+              <View>
+                <Text style={{ fontSize: 20 }}>Balance</Text>
+                <Text style={{ fontSize: 24, fontWeight: 'bold' }}>Rp {user.balance}</Text>
+              </View>
+            </View>
 
-        <View style={[styles.transactionsContainer, { marginTop: 20 }]}>
-          <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 10 }}>Transactions</Text>
-          <View style={styles.transactionCard}>
-            {transactions.map(transaction => {
-              console.log(user); // Log the avatar URL here
-              return (
-                <View key={transaction.id} style={styles.transactionItem}>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Image
-                      source={
-                        user.avatar_url
-                          ? { uri: user.avatar_url }
-                          : require('../../assets/avatar.png')
-                      }
-                      style={styles.transactionAvatar}
-                    />
-                    <View style={{ flex: 1, marginLeft: 10 }}>
-                      <Text style={styles.transactionName}>{transaction.fromto}</Text>
-                      <Text style={styles.transactionDescription}>{transaction.description}</Text>
+            <View style={[styles.transactionsContainer, { marginTop: 20 }]}>
+              <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 10 }}>Transactions</Text>
+              <View style={styles.transactionCard}>
+                {transactions.map(transaction => {
+                  console.log(user); // Log the avatar URL here
+                  return (
+                    <View key={transaction.id} style={styles.transactionItem}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Image
+                          source={
+                            user.avatar_url
+                              ? { uri: user.avatar_url }
+                              : require('../../assets/avatar.png')
+                          }
+                          style={styles.transactionAvatar}
+                        />
+                        <View style={{ flex: 1, marginLeft: 10 }}>
+                          <Text style={styles.transactionName}>{transaction.fromto}</Text>
+                          <Text style={styles.transactionDescription}>{transaction.description}</Text>
+                        </View>
+                        <Text
+                          style={[
+                            styles.transactionAmount,
+                            { color: transaction.type === 'Topup' ? '#19918F' : '#D9534F' },
+                          ]}
+                        >
+                          {transaction.type === 'Topup' ? `+ ${transaction.amount}` : `- ${transaction.amount}`}
+                        </Text>
+                      </View>
                     </View>
-                    <Text
-                      style={[
-                        styles.transactionAmount,
-                        { color: transaction.type === 'Topup' ? '#19918F' : '#D9534F' },
-                      ]}
-                    >
-                      {transaction.type === 'Topup' ? `+ ${transaction.amount}` : `- ${transaction.amount}`}
-                    </Text>
-                  </View>
-                </View>
-              );
-            })}
+                  );
+                })}
+              </View>
+            </View>
           </View>
-        </View>
-      </View>
-    </ScrollView>
+        </ScrollView>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
 
@@ -205,5 +244,14 @@ const styles = StyleSheet.create({
   transactionAmount: {
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  container: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+    backgroundColor: 'pink',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
